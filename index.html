@@ -44,6 +44,14 @@
   .dl:hover{border-color:var(--accent);background:var(--accent-dim);color:#fff}
   .dl.off{opacity:.38;cursor:default;pointer-events:none}
   .dl svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+  .count{display:flex;align-items:center;gap:14px}
+  .reset{background:none;border:0;padding:0;color:var(--mut);font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .reset:hover{color:var(--ink)}
+  .heard{display:none;align-items:center;gap:4px;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:1.5px;color:var(--accent);white-space:nowrap}
+  .row.done .heard{display:inline-flex}
+  .row.done{background:#111114}
+  .row.done .ttl{color:var(--mut)}
+  .row.done.on .ttl{color:var(--ink)}
   .statusbar{position:fixed;left:0;right:0;bottom:0;background:rgba(10,10,12,0.92);border-top:1px solid var(--line);
     backdrop-filter:blur(8px);padding:9px 18px;padding-bottom:calc(9px + env(safe-area-inset-bottom,0));
     display:flex;justify-content:space-between;font-size:11px;color:var(--mut);letter-spacing:1px;font-family:ui-monospace,monospace}
@@ -58,12 +66,12 @@
     <h1>Top <span style="color:var(--accent)">30</span> Remixes 2026</h1>
     <div class="lede">The top 30 remixes of this year's soundtracks. Listen, and download the full quality version.</div>
   </header>
-  <div class="count" id="count">0 tracks</div>
+  <div class="count"><span id="count">0 / 30 heard</span><button class="reset" id="reset" type="button">Reset</button></div>
   <div id="list"></div>
 </div>
 <div class="statusbar">
   <span>Top 30 Remixes</span>
-  <span>Snad Industries &middot; <b>v1.4</b></span>
+  <span>Snad Industries &middot; <b>v1.5</b></span>
 </div>
 
 <script>
@@ -105,7 +113,12 @@
   function drive(id){ return id ? "https://drive.google.com/uc?export=download&id="+id : ""; }
 
   var list=document.getElementById('list'); var ALL=[];
-  document.getElementById('count').textContent=TRACKS.length+" tracks";
+  var KEY='ewc26_top30_heard', HEARD={};
+  try{ HEARD=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ HEARD={}; }
+  var cnt=document.getElementById('count');
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(HEARD)); }catch(e){} }
+  function updCount(){ var n=0; TRACKS.forEach(function(t){ if(HEARD[t.f])n++; }); cnt.textContent=n+' / '+TRACKS.length+' heard'; }
+  document.getElementById('reset').addEventListener('click',function(){ HEARD={}; save(); document.querySelectorAll('.row.done').forEach(function(r){ r.classList.remove('done'); }); updCount(); });
   function fmt(s){ if(!isFinite(s)||s<0)s=0; s=s|0; return (s/60|0)+':'+('0'+(s%60)).slice(-2); }
   function pauseOthers(cur){ ALL.forEach(function(a){ if(a!==cur&&!a.paused)a.pause(); }); }
 
@@ -115,6 +128,8 @@
     var num=document.createElement('div'); num.className='num'; num.textContent=String(i+1).padStart(2,'0');
     var head=document.createElement('div'); head.className='head';
     var ttl=document.createElement('div'); ttl.className='ttl'; ttl.textContent=t.t;
+    var hd=document.createElement('span'); hd.className='heard'; hd.textContent='\u2713 HEARD';
+    if(HEARD[t.f]) row.classList.add('done');
     var pl=document.createElement('div'); pl.className='player';
     var btn=document.createElement('button'); btn.className='pbtn'; btn.type='button'; btn.textContent='\u25B6';
     var bar=document.createElement('div'); bar.className='pbar';
@@ -128,11 +143,11 @@
     if(url){ dl=document.createElement('a'); dl.className='dl'; dl.href=url; dl.setAttribute('download',''); }
     else { dl=document.createElement('span'); dl.className='dl off'; dl.title='Download kommt'; }
     dl.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> WAV';
-    head.appendChild(num); head.appendChild(ttl); head.appendChild(dl);
+    head.appendChild(num); head.appendChild(ttl); head.appendChild(hd); head.appendChild(dl);
     row.appendChild(head); row.appendChild(pl); row.appendChild(au);
     list.appendChild(row);
     function upd(){ var d=au.duration; tm.textContent=fmt(au.currentTime)+((isFinite(d)&&d>0)?(' / '+fmt(d)):''); }
-    btn.addEventListener('click',function(){ if(au.paused){ pauseOthers(au); au.play().catch(function(){}); btn.textContent='...'; } else au.pause(); });
+    btn.addEventListener('click',function(){ if(!HEARD[t.f]){ HEARD[t.f]=1; save(); row.classList.add('done'); updCount(); } if(au.paused){ pauseOthers(au); au.play().catch(function(){}); btn.textContent='...'; } else au.pause(); });
     au.addEventListener('play',function(){ btn.textContent='\u2759\u2759'; btn.classList.add('on'); row.classList.add('on'); });
     au.addEventListener('pause',function(){ btn.textContent='\u25B6'; btn.classList.remove('on'); row.classList.remove('on'); });
     au.addEventListener('ended',function(){ btn.textContent='\u25B6'; pd.style.width='0%'; });
@@ -142,6 +157,7 @@
     au.addEventListener('error',function(){ btn.textContent='!'; });
     bar.addEventListener('click',function(e){ var r=bar.getBoundingClientRect(),d=au.duration||0; if(d) au.currentTime=Math.max(0,Math.min(d,(e.clientX-r.left)/r.width*d)); });
   });
+  updCount();
 })();
 </script>
 </body>
