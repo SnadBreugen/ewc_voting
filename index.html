@@ -59,7 +59,7 @@
 </div>
 <div class="statusbar">
   <span>Top 30 Remixes</span>
-  <span>Snad Industries &middot; <b>v1.2</b></span>
+  <span>Snad Industries &middot; <b>v1.3</b></span>
 </div>
 
 <script>
@@ -118,7 +118,7 @@
     var pd=document.createElement('div'); pd.className='played';
     bar.appendChild(buf); bar.appendChild(pd);
     var tm=document.createElement('div'); tm.className='time'; tm.textContent='0:00';
-    var au=document.createElement('audio'); au.preload='none'; au.src='audio/'+encodeURIComponent(t.f)+'.mp3'; ALL.push(au);
+    var au=document.createElement('audio'); au.preload='none'; au.src=encodeURIComponent(t.f)+'.mp3'; ALL.push(au);
     pl.appendChild(btn); pl.appendChild(bar); pl.appendChild(tm);
     var dl;
     if(url){ dl=document.createElement('a'); dl.className='dl'; dl.href=url; dl.setAttribute('download',''); }
