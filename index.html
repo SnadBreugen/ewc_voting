@@ -56,34 +56,6 @@
     backdrop-filter:blur(8px);padding:9px 18px;padding-bottom:calc(9px + env(safe-area-inset-bottom,0));
     display:flex;justify-content:space-between;font-size:11px;color:var(--mut);letter-spacing:1px;font-family:ui-monospace,monospace}
   .statusbar b{color:var(--accent)}
-  .vbtns{display:none;gap:4px}
-  body.voting .vbtns{display:flex}
-  body.voting .heard{display:none!important}
-  .vb{width:28px;height:28px;border-radius:6px;border:1px solid var(--line);background:var(--panel2);color:var(--mut);
-    font-family:ui-monospace,monospace;font-size:12px;font-weight:700;cursor:pointer;padding:0;transition:.12s}
-  .vb:hover{border-color:var(--accent);color:var(--ink)}
-  .vb.sel{background:var(--accent);border-color:var(--accent);color:#111}
-  .who{display:none;color:var(--accent);font-weight:500}
-  body.voting .who{display:inline}
-  .out{display:none;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:1.5px;color:var(--mut);white-space:nowrap}
-  body.voting .row.x .vbtns{display:none}
-  body.voting .row.x .out{display:inline}
-  body.voting .row.x{opacity:.4}
-  body.voting .row.pick{border-color:var(--accent)}
-  .vpanel{display:none;position:fixed;left:0;right:0;bottom:37px;z-index:5;background:#16120f;border-top:2px solid var(--accent);
-    padding:12px 18px;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px}
-  body.voting .vpanel{display:flex}
-  body.voting .wrap{padding-bottom:200px}
-  .vtag{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:3px;color:var(--accent);font-weight:700}
-  .vname{background:var(--panel2);border:1px solid var(--line);border-radius:7px;color:var(--ink);padding:8px 10px;font:inherit;width:160px}
-  .vname:focus{outline:none;border-color:var(--accent)}
-  .vslot{font-family:ui-monospace,monospace;font-size:12px;color:var(--mut);white-space:nowrap}
-  .vslot b{color:var(--ink);font-family:ui-sans-serif,system-ui,sans-serif;font-size:13px}
-  .vsend{margin-left:auto;background:var(--accent);color:#111;border:0;border-radius:7px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer}
-  .vsend:disabled{opacity:.35;cursor:default}
-  .vclose{background:none;border:1px solid var(--line);color:var(--mut);border-radius:7px;padding:8px 11px;font:inherit;cursor:pointer}
-  .vclose:hover{color:var(--ink);border-color:#3a3a42}
-  .vmsg{font-family:ui-monospace,monospace;font-size:11px;letter-spacing:1px;color:var(--accent)}
   @media(max-width:760px){ #list{grid-template-columns:1fr} }
 </style>
 </head>
@@ -97,19 +69,9 @@
   <div class="count"><span id="count">0 / 30 heard</span><button class="reset" id="reset" type="button">Reset</button></div>
   <div id="list"></div>
 </div>
-<div class="vpanel" id="vpanel">
-  <span class="vtag">TEAM VOTE</span>
-  <input class="vname" id="vname" type="text" placeholder="Dein Name" maxlength="40" autocomplete="off">
-  <span class="vslot">1. <b id="vs0">?</b></span>
-  <span class="vslot">2. <b id="vs1">?</b></span>
-  <span class="vslot">3. <b id="vs2">?</b></span>
-  <span class="vmsg" id="vmsg"></span>
-  <button class="vsend" id="vsend" type="button" disabled>Abschicken</button>
-  <button class="vclose" id="vclose" type="button">Schliessen</button>
-</div>
 <div class="statusbar">
   <span>Top 30 Remixes</span>
-  <span>Snad Industries &middot; <b>v1.8</b></span>
+  <span>Snad Industries &middot; <b>v1.9</b></span>
 </div>
 
 <script>
@@ -147,13 +109,10 @@
     {t:"Timerace 4", f:"bnsd - Timerace", a:"bnsd", d:"1gAZqFnF6t2m3Hhyy5M_vuRuM2sUdhsxU"},
     {t:"Timerace 5", f:"Naswalt - Timerace", a:"Naswalt", d:"1CCHJQ7Sdll9bmBnpN2PAyIc6RMM8vssc"}
   ];
-  /* ===== VOTING: type "vote" to open. SCRIPT_URL = Apps Script web app URL. EXCLUDED = artists not eligible ===== */
-  var SCRIPT_URL="https://script.google.com/macros/s/AKfycbxmnM5jca4FN6wI3yeujeJFVkadWNXRR5CfXwAI4dUui_jrZB1egYdZ6SPpun_n8g6Z2Q/exec";
-  var EXCLUDED=["goresurf","gizo777","Sandburgen","rai_"];
   /* ===== */
   function drive(id){ return id ? "https://drive.google.com/uc?export=download&id="+id : ""; }
 
-  var list=document.getElementById('list'); var ALL=[], ROWS=[], PICKS=[null,null,null];
+  var list=document.getElementById('list'); var ALL=[];
   var KEY='ewc26_top30_heard', HEARD={};
   try{ HEARD=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ HEARD={}; }
   var cnt=document.getElementById('count');
@@ -169,7 +128,6 @@
     var num=document.createElement('div'); num.className='num'; num.textContent=String(i+1).padStart(2,'0');
     var head=document.createElement('div'); head.className='head';
     var ttl=document.createElement('div'); ttl.className='ttl'; ttl.textContent=t.t;
-    var who=document.createElement('span'); who.className='who'; who.textContent=' \u00b7 '+(t.a==='rai_'?'rai.':t.a); ttl.appendChild(who);
     var hd=document.createElement('span'); hd.className='heard'; hd.textContent='\u2713 HEARD';
     if(HEARD[t.f]) row.classList.add('done');
     var pl=document.createElement('div'); pl.className='player';
@@ -185,13 +143,7 @@
     if(url){ dl=document.createElement('a'); dl.className='dl'; dl.href=url; dl.setAttribute('download',''); }
     else { dl=document.createElement('span'); dl.className='dl off'; dl.title='Download kommt'; }
     dl.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg> WAV';
-    var vb=document.createElement('div'); vb.className='vbtns';
-    var out=document.createElement('span'); out.className='out'; out.textContent='NOT ELIGIBLE';
-    if(EXCLUDED.indexOf(t.a)>-1) row.classList.add('x');
-    [0,1,2].forEach(function(k){ var b=document.createElement('button'); b.type='button'; b.className='vb'; b.textContent=String(k+1); b.title='Platz '+(k+1);
-      b.addEventListener('click',function(){ pick(k,i); }); vb.appendChild(b); });
-    ROWS.push({row:row,btns:vb.children});
-    head.appendChild(num); head.appendChild(ttl); head.appendChild(hd); head.appendChild(out); head.appendChild(vb); head.appendChild(dl);
+    head.appendChild(num); head.appendChild(ttl); head.appendChild(hd); head.appendChild(dl);
     row.appendChild(head); row.appendChild(pl); row.appendChild(au);
     list.appendChild(row);
     function upd(){ var d=au.duration; tm.textContent=fmt(au.currentTime)+((isFinite(d)&&d>0)?(' / '+fmt(d)):''); }
@@ -207,40 +159,6 @@
   });
   updCount();
 
-  /* ===== VOTING ===== */
-  var vname=document.getElementById('vname'), vsend=document.getElementById('vsend'), vmsg=document.getElementById('vmsg');
-  try{ vname.value=localStorage.getItem('ewc26_vote_name')||''; }catch(e){}
-  function pick(k,i){
-    if(PICKS[k]===i) PICKS[k]=null;
-    else { PICKS=PICKS.map(function(p){ return p===i?null:p; }); PICKS[k]=i; }
-    vmsg.textContent=''; render();
-  }
-  function render(){
-    ROWS.forEach(function(r,i){
-      var on=false;
-      for(var k=0;k<3;k++){ var s=PICKS[k]===i; r.btns[k].classList.toggle('sel',s); if(s)on=true; }
-      r.row.classList.toggle('pick',on);
-    });
-    for(var k=0;k<3;k++) document.getElementById('vs'+k).textContent=PICKS[k]===null?'?':TRACKS[PICKS[k]].t;
-    vsend.disabled=!(vname.value.trim() && PICKS.every(function(p){ return p!==null; }));
-  }
-  vname.addEventListener('input',function(){ try{ localStorage.setItem('ewc26_vote_name',vname.value.trim()); }catch(e){} render(); });
-  vsend.addEventListener('click',function(){
-    if(!SCRIPT_URL){ vmsg.textContent='SCRIPT URL FEHLT'; return; }
-    var body={name:vname.value.trim(), p1:TRACKS[PICKS[0]].t+' ('+TRACKS[PICKS[0]].f+')', p2:TRACKS[PICKS[1]].t+' ('+TRACKS[PICKS[1]].f+')', p3:TRACKS[PICKS[2]].t+' ('+TRACKS[PICKS[2]].f+')'};
-    vsend.disabled=true; vmsg.textContent='SENDE...';
-    fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
-      .then(function(){ vmsg.textContent='\u2713 GESENDET'; render(); })
-      .catch(function(){ vmsg.textContent='FEHLER, NOCHMAL VERSUCHEN'; render(); });
-  });
-  function setVoting(on){ document.body.classList.toggle('voting',on); if(on){ render(); setTimeout(function(){ if(!vname.value) vname.focus(); },50); } }
-  document.getElementById('vclose').addEventListener('click',function(){ setVoting(false); });
-  var typed='';
-  document.addEventListener('keydown',function(e){
-    var tg=e.target&&e.target.tagName; if(tg==='INPUT'||tg==='TEXTAREA') { if(e.key==='Escape') setVoting(false); return; }
-    if(e.key==='Escape'){ setVoting(false); return; }
-    if(e.key&&e.key.length===1){ typed=(typed+e.key.toLowerCase()).slice(-4); if(typed==='vote'){ typed=''; setVoting(!document.body.classList.contains('voting')); } }
-  });
 })();
 </script>
 </body>
